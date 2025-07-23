@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Fichiers (Lundi à Vendredi)</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload de Fichiers (Lundi à Vendredi)</h1>
+        <p>Veuillez télécharger un fichier (image ou PDF) pour chaque jour de la semaine.</p>
+
+        <!-- Formulaire d'upload -->
+        <div class="upload-section">
+            <label for="lundi">Lundi</label>
+            <input type="file" id="lundi" accept="image/*,application/pdf">
+
+            <label for="mardi">Mardi</label>
+            <input type="file" id="mardi" accept="image/*,application/pdf">
+
+            <label for="mercredi">Mercredi</label>
+            <input type="file" id="mercredi" accept="image/*,application/pdf">
+
+            <label for="jeudi">Jeudi</label>
+            <input type="file" id="jeudi" accept="image/*,application/pdf">
+
+            <label for="vendredi">Vendredi</label>
+            <input type="file" id="vendredi" accept="image/*,application/pdf">
+        </div>
+
+        <!-- Champ pour le nom du fichier PDF -->
+        <label for="filename">Nom du fichier PDF :</label>
+        <input type="text" id="filename" placeholder="ex : semaine-5">
+
+        <!-- Message global -->
+        <p id="global-status" class="status-global"></p>
+
+        <!-- Bouton de génération -->
+        <button id="generateBtn" disabled>Générer le PDF</button>
+    </div>
+
+    <!-- Librairies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
