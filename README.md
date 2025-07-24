@@ -20,14 +20,14 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ### **Building the container**
 
-```bash
+```docker
 docker build -t myndf .
 ```
 
 ### **Running the container**
 
-```bash
+```docker
 docker run -d -p 8080:80 --name myndf myndf
 ```
 
-**Web interface:** localhost:8080
+**Web interface:** : localhost:8080
