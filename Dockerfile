@@ -1,11 +1,13 @@
-# Étape 1 : Utiliser une image nginx officielle
+# Utilise une image nginx légère pour servir les fichiers statiques
 FROM nginx:alpine
 
-# Étape 2 : Copier les fichiers statiques dans le dossier nginx
-COPY . /usr/share/nginx/html
+# Copie les fichiers de l'application dans le répertoire de nginx
+COPY index.html /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
+COPY app.js /usr/share/nginx/html/
 
-# Étape 3 : Ajouter une configuration nginx personnalisée (facultatif mais recommandé)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Port exposé
+# Expose le port 80
 EXPOSE 80
+
+# Nginx démarre automatiquement avec l'image
+CMD ["nginx", "-g", "daemon off;"]

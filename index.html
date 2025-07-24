@@ -3,30 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Fichiers (Lundi à Vendredi)</title>
+    <title>MyNDF - Export</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Upload de Fichiers (Lundi à Vendredi)</h1>
-        <p>Veuillez télécharger un fichier (image ou PDF) pour chaque jour de la semaine.</p>
+        <h1>Justificatifs Note de frais</h1>
+        <p>Veuillez sélectionner les types de justificatifs pour réaliser l'export en pdf.</p>
 
-        <!-- Formulaire d'upload -->
-        <div class="upload-section">
-            <label for="lundi">Lundi</label>
-            <input type="file" id="lundi" accept="image/*,application/pdf">
+        <!-- Section des jours de la semaine (existante) -->
+        <div class="section">
+            <h2>Repas du midi</h2>
+            <div class="upload-section">
+                <label for="lundi">Lundi</label>
+                <input type="file" id="lundi" accept="image/*,application/pdf">
 
-            <label for="mardi">Mardi</label>
-            <input type="file" id="mardi" accept="image/*,application/pdf">
+                <label for="mardi">Mardi</label>
+                <input type="file" id="mardi" accept="image/*,application/pdf">
 
-            <label for="mercredi">Mercredi</label>
-            <input type="file" id="mercredi" accept="image/*,application/pdf">
+                <label for="mercredi">Mercredi</label>
+                <input type="file" id="mercredi" accept="image/*,application/pdf">
 
-            <label for="jeudi">Jeudi</label>
-            <input type="file" id="jeudi" accept="image/*,application/pdf">
+                <label for="jeudi">Jeudi</label>
+                <input type="file" id="jeudi" accept="image/*,application/pdf">
 
-            <label for="vendredi">Vendredi</label>
-            <input type="file" id="vendredi" accept="image/*,application/pdf">
+                <label for="vendredi">Vendredi</label>
+                <input type="file" id="vendredi" accept="image/*,application/pdf">
+            </div>
+        </div>
+
+        <!-- Section des autres justificatifs -->
+        <div class="section">
+            <h2>Déplacement - Autres justificatifs</h2>
+            <div class="justificatifs-section">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="justificatif" value="train_avion" />
+                        <span>Billet de train / avion</span>
+                    </label>
+                    <div class="input-files" id="input-train_avion"></div>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="justificatif" value="transport" />
+                        <span>Transport en commun</span>
+                    </label>
+                    <div class="input-files" id="input-transport"></div>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="justificatif" value="taxe" />
+                        <span>Taxe de séjour</span>
+                    </label>
+                    <div class="input-files" id="input-taxe"></div>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="justificatif" value="courses" />
+                        <span>Courses (alimentation)</span>
+                    </label>
+                    <div class="input-files" id="input-courses"></div>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="justificatif" value="repas_soir" />
+                        <span>Repas du soir</span>
+                    </label>
+                    <div class="input-files" id="input-repas_soir">
+                        <!-- Les inputs des jours seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Champ pour le nom du fichier PDF -->

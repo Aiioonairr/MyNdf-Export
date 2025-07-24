@@ -13,6 +13,21 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+.section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+.section h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+}
+
 .upload-section {
     margin-bottom: 20px;
 }
@@ -20,6 +35,75 @@ body {
 .upload-section label {
     display: block;
     margin-top: 10px;
+    font-weight: bold;
+    color: #555;
+}
+
+.justificatifs-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checkbox-group {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.checkbox-group:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.checkbox-label span {
+    user-select: none;
+}
+
+.input-files {
+    margin-top: 10px;
+    padding-left: 30px;
+}
+
+.input-files input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    border: 2px dashed #4CAF50;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.input-files input[type="file"]:hover {
+    background-color: #f0f8f0;
+}
+
+/* Style spécial pour les repas du soir (même style que upload-section) */
+.repas-soir-section {
+    margin-top: 15px;
+}
+
+.repas-soir-section label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #555;
+    font-size: 14px;
 }
 
 .status-global {
@@ -27,17 +111,60 @@ body {
     color: green;
     font-weight: bold;
     margin-top: 10px;
+    padding: 10px;
+    background-color: #e8f5e8;
+    border-radius: 4px;
+    border-left: 4px solid #4CAF50;
 }
 
 button {
     margin-top: 20px;
-    padding: 10px 20px;
+    padding: 12px 25px;
     background-color: #4CAF50;
     color: white;
     border: none;
     cursor: pointer;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button:hover:not(:disabled) {
+    background-color: #45a049;
 }
 
 button:disabled {
     background-color: #ddd;
+    cursor: not-allowed;
+}
+
+#filename {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#filename:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .section {
+        padding: 15px;
+    }
+    
+    .checkbox-group {
+        padding: 10px;
+    }
 }

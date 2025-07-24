@@ -7,12 +7,29 @@ const files = {
     vendredi: null
 };
 
+// Variables pour stocker les fichiers des justificatifs
+const justificatifsFiles = {
+    train_avion: [],
+    transport: [],
+    taxe: [],
+    courses: []
+};
+
+// Variables pour stocker les repas du soir (même structure que les repas par jour)
+const repasSoirFiles = {
+    lundi_soir: null,
+    mardi_soir: null,
+    mercredi_soir: null,
+    jeudi_soir: null,
+    vendredi_soir: null
+};
+
 // Références DOM
 const generateBtn = document.getElementById('generateBtn');
 const globalStatus = document.getElementById('global-status');
 const filenameInput = document.getElementById('filename');
 
-// Écouteurs pour chaque input fichier
+// Écouteurs pour chaque input fichier des jours
 ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'].forEach(day => {
     document.getElementById(day).addEventListener('change', function(event) {
         const file = event.target.files[0];
@@ -21,13 +38,109 @@ const filenameInput = document.getElementById('filename');
     });
 });
 
+// Écouteurs pour les checkboxes des justificatifs
+document.querySelectorAll('input[type="checkbox"][name="justificatif"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const inputDiv = document.getElementById('input-' + this.value);
+        
+        if (this.checked) {
+            if (this.value === 'repas_soir') {
+                // Traitement spécial pour les repas du soir
+                createRepasSoirInputs(inputDiv);
+            } else {
+                // Crée un input multiple pour les autres justificatifs
+                if (!inputDiv.querySelector('input[type="file"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.name = this.value + '[]';
+                    input.multiple = true;
+                    input.accept = 'image/*,application/pdf';
+                    input.addEventListener('change', function(event) {
+                        justificatifsFiles[checkbox.value] = Array.from(event.target.files);
+                        updateGenerateButtonState();
+                    });
+                    inputDiv.appendChild(input);
+                }
+            }
+        } else {
+            // Supprime l'input si décoché
+            inputDiv.innerHTML = '';
+            if (this.value === 'repas_soir') {
+                // Remet à zéro les repas du soir
+                Object.keys(repasSoirFiles).forEach(key => {
+                    repasSoirFiles[key] = null;
+                });
+            } else {
+                justificatifsFiles[this.value] = [];
+            }
+            updateGenerateButtonState();
+        }
+    });
+});
+
+// Fonction pour créer les inputs des repas du soir
+function createRepasSoirInputs(container) {
+    const repasSoirSection = document.createElement('div');
+    repasSoirSection.className = 'repas-soir-section';
+    
+    const jours = [
+        { key: 'lundi_soir', label: 'Lundi soir' },
+        { key: 'mardi_soir', label: 'Mardi soir' },
+        { key: 'mercredi_soir', label: 'Mercredi soir' },
+        { key: 'jeudi_soir', label: 'Jeudi soir' },
+        { key: 'vendredi_soir', label: 'Vendredi soir' }
+    ];
+    
+    jours.forEach(jour => {
+        const label = document.createElement('label');
+        label.textContent = jour.label;
+        label.setAttribute('for', jour.key);
+        
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.id = jour.key;
+        input.accept = 'image/*,application/pdf';
+        input.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            repasSoirFiles[jour.key] = file || null;
+            updateGenerateButtonState();
+        });
+        
+        repasSoirSection.appendChild(label);
+        repasSoirSection.appendChild(input);
+    });
+    
+    container.appendChild(repasSoirSection);
+}
+
 // Met à jour le bouton et le message global
 function updateGenerateButtonState() {
-    const count = Object.values(files).filter(f => f !== null).length;
-    generateBtn.disabled = count === 0;
+    const dayCount = Object.values(files).filter(f => f !== null).length;
+    const justifCount = Object.values(justificatifsFiles).reduce((total, arr) => total + arr.length, 0);
+    const repasSoirCount = Object.values(repasSoirFiles).filter(f => f !== null).length;
+    const totalCount = dayCount + justifCount + repasSoirCount;
+    
+    generateBtn.disabled = totalCount === 0;
 
-    if (count > 0) {
-        globalStatus.textContent = `✅ ${count} document${count > 1 ? 's' : ''} chargé${count > 1 ? 's' : ''}.`;
+    if (totalCount > 0) {
+        let message = `✅ ${totalCount} document${totalCount > 1 ? 's' : ''} chargé${totalCount > 1 ? 's' : ''}.`;
+        let details = [];
+        
+        if (dayCount > 0) {
+            details.push(`${dayCount} repas par jour`);
+        }
+        if (repasSoirCount > 0) {
+            details.push(`${repasSoirCount} repas du soir`);
+        }
+        if (justifCount > 0) {
+            details.push(`${justifCount} autres justificatifs`);
+        }
+        
+        if (details.length > 0) {
+            message += ` (${details.join(', ')})`;
+        }
+        
+        globalStatus.textContent = message;
     } else {
         globalStatus.textContent = '';
     }
@@ -66,49 +179,165 @@ function convertPDFToImage(file) {
     });
 }
 
+// Fonction pour traiter une image
+async function processImage(file) {
+    if (file.type.startsWith('image/')) {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        await new Promise((resolve) => img.onload = resolve);
+        return img;
+    } else if (file.type === 'application/pdf') {
+        return await convertPDFToImage(file);
+    }
+    return null;
+}
+
 // Génération du PDF
 generateBtn.addEventListener('click', async function () {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape');
-
-    let xPos = 10;
+    const doc = new jsPDF('portrait');
+    
     let yPos = 20;
     const margin = 10;
-    const columnWidth = (doc.internal.pageSize.width - 2 * margin) / 5;
-    const lineHeight = 80;
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const maxImageWidth = pageWidth - 2 * margin;
+    const maxImageHeight = 80;
+
+    // Fonction pour ajouter une nouvelle page si nécessaire
+    function checkNewPage(neededHeight) {
+        if (yPos + neededHeight > pageHeight - margin) {
+            doc.addPage();
+            yPos = 20;
+        }
+    }
+
+    // 1. Traiter les repas par jour (format horizontal)
     const jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
+    const dayFiles = jours.filter(day => files[day] !== null);
+    
+    if (dayFiles.length > 0) {
+        doc.setFontSize(16);
+        doc.text('Repas par jour', margin, yPos);
+        yPos += 15;
+        
+        const columnWidth = maxImageWidth / dayFiles.length;
+        let xPos = margin;
+        
+        for (const day of dayFiles) {
+            const file = files[day];
+            if (!file) continue;
 
-    let columnIndex = 0;
-
-    for (const day of jours) {
-        const file = files[day];
-        if (!file) continue;
-
-        try {
-            let img = null;
-
-            if (file.type.startsWith('image/')) {
-                img = new Image();
-                img.src = URL.createObjectURL(file);
-                await new Promise((resolve) => img.onload = resolve);
-            } else if (file.type === 'application/pdf') {
-                img = await convertPDFToImage(file);
+            try {
+                const img = await processImage(file);
+                if (img) {
+                    const aspectRatio = img.width / img.height;
+                    const imgHeight = Math.min(maxImageHeight, columnWidth / aspectRatio);
+                    
+                    doc.setFontSize(10);
+                    doc.text(day.charAt(0).toUpperCase() + day.slice(1), xPos, yPos - 5);
+                    doc.addImage(img, 'JPEG', xPos, yPos, columnWidth - 5, imgHeight);
+                    xPos += columnWidth;
+                }
+            } catch (error) {
+                console.error(`Erreur lors du traitement de ${day}:`, error);
             }
+        }
+        
+        yPos += maxImageHeight + 20;
+    }
 
-            const aspectRatio = img.width / img.height;
-            const imgHeight = columnWidth / aspectRatio;
-            const x = xPos + (columnIndex * columnWidth);
+    // 2. Traiter les repas du soir (même format que les repas par jour)
+    const joursSoir = ['lundi_soir', 'mardi_soir', 'mercredi_soir', 'jeudi_soir', 'vendredi_soir'];
+    const repasSoirFilesArray = joursSoir.filter(day => repasSoirFiles[day] !== null);
+    
+    if (repasSoirFilesArray.length > 0) {
+        checkNewPage(100);
+        
+        doc.setFontSize(16);
+        doc.text('Repas du soir', margin, yPos);
+        yPos += 15;
+        
+        const columnWidth = maxImageWidth / repasSoirFilesArray.length;
+        let xPos = margin;
+        
+        for (const daySoir of repasSoirFilesArray) {
+            const file = repasSoirFiles[daySoir];
+            if (!file) continue;
 
-            doc.text(day.charAt(0).toUpperCase() + day.slice(1), x, yPos - 5);
-            doc.addImage(img, 'JPEG', x, yPos, columnWidth - 10, imgHeight);
+            try {
+                const img = await processImage(file);
+                if (img) {
+                    const aspectRatio = img.width / img.height;
+                    const imgHeight = Math.min(maxImageHeight, columnWidth / aspectRatio);
+                    
+                    // Nom du jour sans "_soir"
+                    const dayName = daySoir.replace('_soir', '');
+                    doc.setFontSize(10);
+                    doc.text(dayName.charAt(0).toUpperCase() + dayName.slice(1), xPos, yPos - 5);
+                    doc.addImage(img, 'JPEG', xPos, yPos, columnWidth - 5, imgHeight);
+                    xPos += columnWidth;
+                }
+            } catch (error) {
+                console.error(`Erreur lors du traitement de ${daySoir}:`, error);
+            }
+        }
+        
+        yPos += maxImageHeight + 20;
+    }
 
-            columnIndex++;
-        } catch (error) {
-            console.error(`Erreur lors du traitement de ${day}:`, error);
+    // 3. Traiter les autres justificatifs (un par page)
+    const justificatifsLabels = {
+        train_avion: 'Billet de train / avion',
+        transport: 'Transport en commun',
+        taxe: 'Taxe de séjour',
+        courses: 'Courses (alimentation)'
+    };
+
+    for (const [type, filesList] of Object.entries(justificatifsFiles)) {
+        if (filesList.length === 0) continue;
+
+        for (let i = 0; i < filesList.length; i++) {
+            const file = filesList[i];
+            
+            // Nouvelle page pour chaque justificatif
+            if (i > 0 || yPos > 50) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            try {
+                const img = await processImage(file);
+                if (img) {
+                    // Titre
+                    doc.setFontSize(16);
+                    doc.text(`${justificatifsLabels[type]} ${filesList.length > 1 ? `(${i + 1}/${filesList.length})` : ''}`, margin, yPos);
+                    yPos += 20;
+                    
+                    // Calculer les dimensions de l'image
+                    const aspectRatio = img.width / img.height;
+                    let imgWidth = maxImageWidth;
+                    let imgHeight = imgWidth / aspectRatio;
+                    
+                    // Si l'image est trop haute, ajuster
+                    if (imgHeight > pageHeight - yPos - margin) {
+                        imgHeight = pageHeight - yPos - margin;
+                        imgWidth = imgHeight * aspectRatio;
+                    }
+                    
+                    // Centrer l'image
+                    const xPos = (pageWidth - imgWidth) / 2;
+                    
+                    doc.addImage(img, 'JPEG', xPos, yPos, imgWidth, imgHeight);
+                    yPos += imgHeight + 20;
+                }
+            } catch (error) {
+                console.error(`Erreur lors du traitement de ${type} ${i + 1}:`, error);
+            }
         }
     }
 
     // Utiliser le nom fourni par l'utilisateur ou un nom par défaut
-    const customName = filenameInput.value.trim() || 'semaine';
+    const customName = filenameInput.value.trim() || 'justificatifs';
     doc.save(`${customName}.pdf`);
 });
