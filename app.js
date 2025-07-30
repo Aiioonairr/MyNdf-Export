@@ -146,7 +146,34 @@ function updateGenerateButtonState() {
     }
 }
 
-// Conversion PDF → image avec pdf.js
+// FONCTION QUALITÉ MAXIMALE ABSOLUE : Aucune compression, résolution maximale
+function resizeAndCompressImage(img, maxWidth = 4000, maxHeight = 3000, quality = 1.0) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let { width, height } = img;
+    
+    // Calcul du ratio pour respecter les dimensions max (très élevées)
+    const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+    width = Math.floor(width * ratio);
+    height = Math.floor(height * ratio);
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Paramètres de rendu ultra-haute qualité
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.globalCompositeOperation = 'source-over';
+    
+    // Dessine l'image redimensionnée avec la plus haute précision
+    ctx.drawImage(img, 0, 0, width, height);
+    
+    // Retourne l'image sans compression (qualité = 1.0)
+    return canvas.toDataURL('image/jpeg', quality);
+}
+
+// Conversion PDF → image avec pdf.js (QUALITÉ MAXIMALE ABSOLUE)
 function convertPDFToImage(file) {
     return new Promise((resolve, reject) => {
         const fileReader = new FileReader();
@@ -156,7 +183,8 @@ function convertPDFToImage(file) {
 
             pdfjsLib.getDocument(pdfData).promise.then(function (pdf) {
                 pdf.getPage(1).then(function (page) {
-                    const scale = 1.5;
+                    // Échelle MAXIMALE pour une résolution parfaite
+                    const scale = 4.0;
                     const viewport = page.getViewport({ scale });
 
                     const canvas = document.createElement('canvas');
@@ -164,9 +192,18 @@ function convertPDFToImage(file) {
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
 
-                    page.render({ canvasContext: context, viewport }).promise.then(function () {
+                    // Paramètres de rendu ultra-haute qualité
+                    context.imageSmoothingEnabled = true;
+                    context.imageSmoothingQuality = 'high';
+                    context.globalCompositeOperation = 'source-over';
+
+                    page.render({ 
+                        canvasContext: context, 
+                        viewport: viewport,
+                        intent: 'print' // Mode impression pour la meilleure qualité
+                    }).promise.then(function () {
                         const img = new Image();
-                        img.src = canvas.toDataURL();
+                        img.src = canvas.toDataURL('image/jpeg', 1.0); // AUCUNE compression
                         img.onload = function () {
                             resolve(img);
                         };
@@ -192,10 +229,16 @@ async function processImage(file) {
     return null;
 }
 
-// Génération du PDF
+// Génération du PDF (QUALITÉ MAXIMALE ABSOLUE)
 generateBtn.addEventListener('click', async function () {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('portrait');
+    // Utilise la plus haute résolution possible pour jsPDF
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: false // Désactive la compression interne de jsPDF
+    });
     
     let yPos = 20;
     const margin = 10;
@@ -233,10 +276,14 @@ generateBtn.addEventListener('click', async function () {
                 if (img) {
                     const aspectRatio = img.width / img.height;
                     const imgHeight = Math.min(maxImageHeight, columnWidth / aspectRatio);
+                    const imgWidth = columnWidth - 5;
+                    
+                    // QUALITÉ MAXIMALE ABSOLUE : Multiplicateur x10 avec qualité parfaite
+                    const compressedDataUrl = resizeAndCompressImage(img, imgWidth * 10, imgHeight * 10, 1.0);
                     
                     doc.setFontSize(10);
                     doc.text(day.charAt(0).toUpperCase() + day.slice(1), xPos, yPos - 5);
-                    doc.addImage(img, 'JPEG', xPos, yPos, columnWidth - 5, imgHeight);
+                    doc.addImage(compressedDataUrl, 'JPEG', xPos, yPos, imgWidth, imgHeight, undefined, 'NONE');
                     xPos += columnWidth;
                 }
             } catch (error) {
@@ -270,12 +317,16 @@ generateBtn.addEventListener('click', async function () {
                 if (img) {
                     const aspectRatio = img.width / img.height;
                     const imgHeight = Math.min(maxImageHeight, columnWidth / aspectRatio);
+                    const imgWidth = columnWidth - 5;
+                    
+                    // QUALITÉ MAXIMALE ABSOLUE : Multiplicateur x10 avec qualité parfaite
+                    const compressedDataUrl = resizeAndCompressImage(img, imgWidth * 10, imgHeight * 10, 1.0);
                     
                     // Nom du jour sans "_soir"
                     const dayName = daySoir.replace('_soir', '');
                     doc.setFontSize(10);
                     doc.text(dayName.charAt(0).toUpperCase() + dayName.slice(1), xPos, yPos - 5);
-                    doc.addImage(img, 'JPEG', xPos, yPos, columnWidth - 5, imgHeight);
+                    doc.addImage(compressedDataUrl, 'JPEG', xPos, yPos, imgWidth, imgHeight, undefined, 'NONE');
                     xPos += columnWidth;
                 }
             } catch (error) {
@@ -325,10 +376,13 @@ generateBtn.addEventListener('click', async function () {
                         imgWidth = imgHeight * aspectRatio;
                     }
                     
+                    // QUALITÉ MAXIMALE ABSOLUE : Résolution ultra-haute avec qualité parfaite
+                    const compressedDataUrl = resizeAndCompressImage(img, imgWidth * 6, imgHeight * 6, 1.0);
+                    
                     // Centrer l'image
                     const xPos = (pageWidth - imgWidth) / 2;
                     
-                    doc.addImage(img, 'JPEG', xPos, yPos, imgWidth, imgHeight);
+                    doc.addImage(compressedDataUrl, 'JPEG', xPos, yPos, imgWidth, imgHeight, undefined, 'NONE');
                     yPos += imgHeight + 20;
                 }
             } catch (error) {
